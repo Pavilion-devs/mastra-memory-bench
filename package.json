@@ -1,0 +1,30 @@
+{
+  "name": "mastra-memory-bench",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "bench": "./bench.sh",
+    "report": "tsx src/report.ts",
+    "typecheck": "tsc -p .",
+    "download": "tsx src/download.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@ai-sdk/amazon-bedrock": "5.0.144",
+    "@libsql/client": "0.18.0",
+    "@mastra/core": "1.84.0",
+    "@mastra/libsql": "1.31.0",
+    "@mastra/memory": "1.41.2",
+    "dotenv": "18.0.10",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
