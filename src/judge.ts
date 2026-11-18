@@ -2,7 +2,8 @@ import { Agent } from '@mastra/core/agent';
 import type { QuestionType } from './data.js';
 import { judgeModel } from './models.js';
 import { withRetry } from './retry.js';
-import { type Usage, fromSdkUsage } from './usage.js';
+import type { Usage } from './usage.js';
+import { metered } from './meter.js';
 
 /**
  * Official LongMemEval judge prompts, verbatim from
@@ -77,11 +78,13 @@ export async function judge(
   response: string,
   abstention: boolean,
 ): Promise<{ correct: boolean; raw: string; usage: Usage }> {
-  const r: any = await withRetry(() =>
-    judgeAgent.generate(judgePrompt(type, question, answer, response, abstention), {
-      modelSettings: { temperature: 0, maxOutputTokens: 10 },
-    }),
+  const { result: r, usage } = await withRetry(() =>
+    metered(() =>
+      judgeAgent.generate(judgePrompt(type, question, answer, response, abstention), {
+        modelSettings: { temperature: 0, maxOutputTokens: 10, maxRetries: 0 },
+      }),
+    ),
   );
-  const raw = String(r.text ?? '').trim();
-  return { correct: /^\W*yes\b/i.test(raw), raw, usage: fromSdkUsage(r.totalUsage ?? r.usage) };
+  const raw = String((r as any).text ?? '').trim();
+  return { correct: /^\W*yes\b/i.test(raw), raw, usage };
 }

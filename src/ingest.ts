@@ -9,7 +9,8 @@ import { AGENT_INSTRUCTIONS, CONFIGS } from './configs.js';
 import { type LongMemEvalQuestion, sessionsChronological } from './data.js';
 import { AGENT_MODEL_ID, EMBED_MODEL_ID, agentModel, embedder } from './models.js';
 import { type Usage, addUsage, emptyUsage, fromSdkUsage } from './usage.js';
-import { withRetry } from './retry.js';
+import { Semaphore, withRetry } from './retry.js';
+import { metered } from './meter.js';
 
 export const questionDir = (qid: string) => join('.cache', 'q', qid);
 
@@ -39,6 +40,8 @@ export interface WorkingMemoryStats {
   sessions: number;
   model: string;
   usage: Usage;
+  /** what Mastra's generate() result reported, kept to compare with the provider-level meter */
+  mastraReportedUsage?: Usage;
   ms: number;
   failedSessions: number;
   chars: number;
@@ -124,35 +127,7 @@ export async function ensureWorkingMemory(q: LongMemEvalQuestion, log: (s: strin
   if (existsSync(join(dir, 'wm.done'))) return null;
 
   let stats: WorkingMemoryStats | null = null;
-  if (!readJson(statsPath(qid, 'wm'))) {
-    const wmUrl = `file:${join(dir, 'wm-ingest.db')}`;
-    const wmMemory = new Memory({ storage: new LibSQLStore({ id: `wm-${qid}`, url: wmUrl }), options: CONFIGS['working-memory'].options });
-    const wmAgent = new Agent({ id: 'wm-ingest', name: 'wm-ingest', instructions: AGENT_INSTRUCTIONS, model: agentModel, memory: wmMemory });
-    let usage = emptyUsage();
-    let failed = 0;
-    const t0 = Date.now();
-    for (const [i, s] of sessions.entries()) {
-      const msgs = s.turns
-        .filter(t => t.content)
-        .map((t, j) => ({ role: t.role === 'assistant' ? 'assistant' : 'user', content: t.content, createdAt: new Date(s.date.getTime() + j * 5000) }));
-      if (!msgs.length) continue;
-      try {
-        const r: any = await withRetry(() =>
-          wmAgent.generate(msgs as any, { memory: { thread: threadIdFor(qid, s.id, i), resource: qid }, modelSettings: { temperature: 0 } }),
-        );
-        usage = addUsage(usage, fromSdkUsage(r.totalUsage ?? r.usage));
-      } catch (e: any) {
-        failed++;
-        log(`${qid}: working-memory ingestion failed on session ${i}: ${String(e?.message ?? e).slice(0, 200)}`);
-      }
-    }
-    const wm = (await wmMemory.getWorkingMemory({ threadId: anyThread, resourceId: qid })) ?? '';
-    for (const f of ['wm-ingest.db', 'wm-ingest.db-wal', 'wm-ingest.db-shm']) rmSync(join(dir, f), { force: true });
-    writeFileSync(wmTextPath(qid), wm);
-    stats = { kind: 'wm', questionId: qid, sessions: sessions.length, model: AGENT_MODEL_ID, usage, ms: Date.now() - t0, failedSessions: failed, chars: wm.length };
-    writeFileSync(statsPath(qid, 'wm'), JSON.stringify(stats, null, 2));
-    log(`${qid}: working memory ${wm.length} chars, ${usage.inputTokens} in / ${usage.outputTokens} out tokens, ${failed} failed sessions (${(stats.ms / 60000).toFixed(1)} min)`);
-  }
+  if (!readJson(statsPath(qid, 'wm'))) stats = await wmSemaphore.run(() => buildWorkingMemory(q, log));
   await memory.updateWorkingMemory({
     threadId: anyThread,
     resourceId: qid,
@@ -162,6 +137,57 @@ export async function ensureWorkingMemory(q: LongMemEvalQuestion, log: (s: strin
   await checkpoint(qid);
   writeFileSync(join(dir, 'wm.done'), '');
   return stats;
+}
+
+/** Working-memory ingestion is the throttling-sensitive step, so it has its own concurrency limit. */
+let wmSemaphore = new Semaphore(2);
+export const setWorkingMemoryConcurrency = (n: number) => (wmSemaphore = new Semaphore(n));
+
+async function buildWorkingMemory(q: LongMemEvalQuestion, log: (s: string) => void): Promise<WorkingMemoryStats> {
+  const qid = q.question_id;
+  const dir = questionDir(qid);
+  const sessions = sessionsChronological(q);
+  const anyThread = threadIdFor(qid, sessions[0].id, 0);
+  {
+    // start from an empty scratchpad: never resume a half-built working memory from an interrupted run
+    for (const f of ['wm-ingest.db', 'wm-ingest.db-wal', 'wm-ingest.db-shm']) rmSync(join(dir, f), { force: true });
+    const wmUrl = `file:${join(dir, 'wm-ingest.db')}`;
+    const wmMemory = new Memory({ storage: new LibSQLStore({ id: `wm-${qid}`, url: wmUrl }), options: CONFIGS['working-memory'].options });
+    const wmAgent = new Agent({ id: 'wm-ingest', name: 'wm-ingest', instructions: AGENT_INSTRUCTIONS, model: agentModel, memory: wmMemory });
+    let usage = emptyUsage();
+    let mastraReported = emptyUsage();
+    const failed = 0; // a session that still fails after all retries aborts the question (no partial working memory)
+    const t0 = Date.now();
+    log(`${qid}: building working memory over ${sessions.length} sessions`);
+    for (const [i, s] of sessions.entries()) {
+      const msgs = s.turns
+        .filter(t => t.content)
+        .map((t, j) => ({ role: t.role === 'assistant' ? 'assistant' : 'user', content: t.content, createdAt: new Date(s.date.getTime() + j * 5000) }));
+      if (!msgs.length) continue;
+      try {
+        const { result: r, usage: u } = await withRetry(() =>
+          metered(() =>
+            wmAgent.generate(msgs as any, {
+              memory: { thread: threadIdFor(qid, s.id, i), resource: qid },
+              modelSettings: { temperature: 0, maxRetries: 0 },
+            }),
+          ),
+        );
+        usage = addUsage(usage, u);
+        mastraReported = addUsage(mastraReported, fromSdkUsage((r as any).totalUsage ?? (r as any).usage));
+      } catch (e: any) {
+        log(`${qid}: working-memory ingestion aborted on session ${i} after retries (${usage.inputTokens} in / ${usage.outputTokens} out tokens spent): ${String(e?.message ?? e).slice(0, 200)}`);
+        throw e;
+      }
+    }
+    const wm = (await wmMemory.getWorkingMemory({ threadId: anyThread, resourceId: qid })) ?? '';
+    for (const f of ['wm-ingest.db', 'wm-ingest.db-wal', 'wm-ingest.db-shm']) rmSync(join(dir, f), { force: true });
+    writeFileSync(wmTextPath(qid), wm);
+    const stats: WorkingMemoryStats = { kind: 'wm', questionId: qid, sessions: sessions.length, model: AGENT_MODEL_ID, usage, mastraReportedUsage: mastraReported, ms: Date.now() - t0, failedSessions: failed, chars: wm.length };
+    writeFileSync(statsPath(qid, 'wm'), JSON.stringify(stats, null, 2));
+    log(`${qid}: working memory ${wm.length} chars, ${usage.inputTokens} in / ${usage.outputTokens} out tokens (${(stats.ms / 60000).toFixed(1)} min)`);
+    return stats;
+  }
 }
 
 /** Delete a question's databases (stats and working-memory text are kept). */

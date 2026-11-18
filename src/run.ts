@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { answerQuestion } from './answer.js';
 import { CONFIGS, CONFIG_NAMES, type ConfigName } from './configs.js';
 import { isAbstention, loadDataset, stratifiedSample } from './data.js';
-import { type IngestStats, cleanupQuestion, ensureMessages, ensureWorkingMemory } from './ingest.js';
+import { type IngestStats, cleanupQuestion, ensureMessages, ensureWorkingMemory, setWorkingMemoryConcurrency } from './ingest.js';
 import { judge } from './judge.js';
 import { AGENT_MODEL_ID, EMBED_MODEL_ID, JUDGE_MODEL_ID } from './models.js';
 import { costUsd, emptyUsage } from './usage.js';
@@ -17,6 +17,7 @@ const { values: args } = parseArgs({
     'run-id': { type: 'string' },
     out: { type: 'string', default: 'results/main' },
     cleanup: { type: 'boolean', default: false },
+    'wm-concurrency': { type: 'string', default: '2' },
     concurrency: { type: 'string', default: '4' },
     'max-usd': { type: 'string', default: '15' },
     limit: { type: 'string' },
@@ -28,6 +29,7 @@ const configs = args.configs!.split(',') as ConfigName[];
 for (const c of configs) if (!CONFIG_NAMES.includes(c)) throw new Error(`Unknown config ${c}`);
 const runIds = args['run-id'] ? [args['run-id']] : Array.from({ length: Number(args.runs) }, (_, i) => `run${i + 1}`);
 const needWm = configs.some(c => (CONFIGS[c].options as any).workingMemory?.enabled);
+setWorkingMemoryConcurrency(Number(args['wm-concurrency']));
 const maxUsd = Number(args['max-usd']);
 
 let questions = stratifiedSample(loadDataset(), perType);
@@ -50,10 +52,11 @@ const done = new Set(readJsonl(answersPath).filter(r => !r.error).map(r => `${r.
 // running spend estimate (includes earlier, resumed work) for the budget guard
 let spent = 0;
 for (const r of readJsonl(ingestPath) as IngestStats[]) spent += ingestCost(r);
-for (const r of readJsonl(answersPath)) spent += costUsd(AGENT_MODEL_ID, r.answerUsage ?? emptyUsage()) + costUsd(JUDGE_MODEL_ID, r.judgeUsage ?? emptyUsage());
+for (const r of [...readJsonl(answersPath), ...readJsonl(join(outDir, 'discarded-attempts.answers.jsonl'))])
+  spent += costUsd(AGENT_MODEL_ID, r.answerUsage ?? emptyUsage()) + costUsd(JUDGE_MODEL_ID, r.judgeUsage ?? emptyUsage());
 
 function ingestCost(s: IngestStats) {
-  return s.kind === 'embed' ? costUsd(EMBED_MODEL_ID, { ...emptyUsage(), inputTokens: s.tokens }) : costUsd(AGENT_MODEL_ID, s.usage);
+  return s.kind === 'embed' ? costUsd(s.model, { ...emptyUsage(), inputTokens: s.tokens }) : costUsd(s.model, s.usage);
 }
 function checkBudget() {
   if (spent > maxUsd) {
@@ -108,7 +111,7 @@ async function processQuestion(q: (typeof questions)[number]) {
       const a = await answerQuestion(q, config, runId);
       const j = await judge(q.question_type, q.question, String(q.answer), a.hypothesis, isAbstention(q));
       spent += costUsd(AGENT_MODEL_ID, a.usage) + costUsd(JUDGE_MODEL_ID, j.usage);
-      appendFileSync(answersPath, JSON.stringify({ ...base, question: q.question, answer: q.answer, hypothesis: a.hypothesis, correct: j.correct, judgeRaw: j.raw, latencyMs: a.latencyMs, answerUsage: a.usage, judgeUsage: j.usage }) + '\n');
+      appendFileSync(answersPath, JSON.stringify({ ...base, question: q.question, answer: q.answer, hypothesis: a.hypothesis, correct: j.correct, judgeRaw: j.raw, latencyMs: a.latencyMs, answerUsage: a.usage, mastraReportedAnswerUsage: a.mastraReportedUsage, judgeUsage: j.usage }) + '\n');
       log(`${q.question_id} [${q.question_type}] ${config}/${runId}: ${j.correct ? 'CORRECT' : 'wrong'} (${a.latencyMs} ms, ${a.usage.inputTokens} in) ~$${spent.toFixed(2)}`);
     } catch (e: any) {
       appendFileSync(answersPath, JSON.stringify({ ...base, error: String(e?.message ?? e).slice(0, 500) }) + '\n');
