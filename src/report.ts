@@ -165,15 +165,15 @@ writeFileSync(join(dir, 'summary.md'), md);
 writeFileSync(join(dir, 'summary.json'), JSON.stringify({ meta, embedCostPerQ, wmCostPerQ, totalSpend, matchedQuestionIds: qids, summaries: all, matched }, null, 2));
 
 // ---- chart (dependency-free SVG): pooled accuracy with 95% CI per config/run; n and $/question as labels ----
-const W = 820, rowH = 46, top = 64, left = 270, plotW = 400;
-const H = top + all.length * rowH + 50;
+const W = 900, rowH = 46, top = 64, left = 250, plotW = 400, labelX = left + plotW + 18;
+const H = top + all.length * rowH + 76;
 const x = (v: number) => left + v * plotW;
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <rect width="100%" height="100%" fill="#ffffff"/>
 <text x="20" y="28" font-size="17" font-weight="600" fill="#111">Mastra Memory on LongMemEval-S (stratified subset)</text>
 <text x="20" y="48" font-size="12" fill="#555">Accuracy with 95% Wilson CI · agent Claude Haiku 4.5 · judge Claude Sonnet 4.6 (official prompts) · label: n, cost per question</text>`;
 for (let t = 0; t <= 10; t += 2) {
-  svg += `<line x1="${x(t / 10)}" y1="${top}" x2="${x(t / 10)}" y2="${H - 40}" stroke="#e5e5e5"/><text x="${x(t / 10)}" y="${H - 24}" font-size="11" text-anchor="middle" fill="#666">${t * 10}%</text>`;
+  svg += `<line x1="${x(t / 10)}" y1="${top}" x2="${x(t / 10)}" y2="${H - 66}" stroke="#e5e5e5"/><text x="${x(t / 10)}" y="${H - 50}" font-size="11" text-anchor="middle" fill="#666">${t * 10}%</text>`;
 }
 all.forEach((s, i) => {
   const y = top + i * rowH + 10;
@@ -182,8 +182,11 @@ all.forEach((s, i) => {
   svg += `<rect x="${left}" y="${y}" width="${Math.max(1, s.pooled * plotW)}" height="22" rx="3" fill="${usesWM(s.config) ? '#d9822b' : '#2f6fde'}"/>`;
   svg += `<line x1="${x(s.pooledCI[0])}" y1="${y + 11}" x2="${x(s.pooledCI[1])}" y2="${y + 11}" stroke="#111" stroke-width="1.5"/>`;
   svg += `<line x1="${x(s.pooledCI[0])}" y1="${y + 5}" x2="${x(s.pooledCI[0])}" y2="${y + 17}" stroke="#111" stroke-width="1.5"/><line x1="${x(s.pooledCI[1])}" y1="${y + 5}" x2="${x(s.pooledCI[1])}" y2="${y + 17}" stroke="#111" stroke-width="1.5"/>`;
-  svg += `<text x="${Math.max(x(s.pooledCI[1]), x(s.pooled)) + 8}" y="${y + 15}" font-size="12" fill="#111">${pct(s.pooled)} · n=${s.n} · $${(s.memoryBuildCostPerQ + s.answerCostPerQ).toFixed(3)}/q</text>`;
+  svg += `<text x="${labelX}" y="${y + 15}" font-size="12" fill="#111"><tspan font-weight="600">${pct(s.pooled)}</tspan> · n=${s.n} · $${(s.memoryBuildCostPerQ + s.answerCostPerQ).toFixed(3)}/question</text>`;
 });
+const ly = H - 22;
+svg += `<rect x="${left}" y="${ly - 10}" width="12" height="12" rx="2" fill="#2f6fde"/><text x="${left + 18}" y="${ly}" font-size="12" fill="#333">no LLM work at ingestion</text>`;
+svg += `<rect x="${left + 190}" y="${ly - 10}" width="12" height="12" rx="2" fill="#d9822b"/><text x="${left + 208}" y="${ly}" font-size="12" fill="#333">working memory: the agent model re-reads every past session (~$0.88/question)</text>`;
 svg += `</svg>\n`;
 writeFileSync(join(dir, 'chart.svg'), svg);
 console.log(md);

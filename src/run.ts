@@ -18,6 +18,7 @@ const { values: args } = parseArgs({
     out: { type: 'string', default: 'results/main' },
     cleanup: { type: 'boolean', default: false },
     'wm-concurrency': { type: 'string', default: '2' },
+    repeat: { type: 'string' },
     concurrency: { type: 'string', default: '4' },
     'max-usd': { type: 'string', default: '15' },
     limit: { type: 'string' },
@@ -28,6 +29,7 @@ const perType = Number(args['per-type']);
 const configs = args.configs!.split(',') as ConfigName[];
 for (const c of configs) if (!CONFIG_NAMES.includes(c)) throw new Error(`Unknown config ${c}`);
 const runIds = args['run-id'] ? [args['run-id']] : Array.from({ length: Number(args.runs) }, (_, i) => `run${i + 1}`);
+const repeat = args.repeat ? (args.repeat.split(',') as ConfigName[]) : null;
 const needWm = configs.some(c => (CONFIGS[c].options as any).workingMemory?.enabled);
 setWorkingMemoryConcurrency(Number(args['wm-concurrency']));
 const maxUsd = Number(args['max-usd']);
@@ -97,6 +99,8 @@ async function processQuestion(q: (typeof questions)[number]) {
   };
   const pending = runIds
     .flatMap(runId => configs.map(config => ({ runId, config })))
+    // with --repeat, only the listed configs get run2..runN; the others run once
+    .filter(({ runId, config }) => !repeat || runId === runIds[0] || repeat.includes(config))
     .filter(({ runId, config }) => !done.has(`${q.question_id}|${config}|${runId}`));
   if (!pending.length) return;
   record(await ensureMessages(q, log));

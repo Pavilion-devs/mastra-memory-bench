@@ -27,10 +27,9 @@ npx tsx src/download.ts
 npx tsx src/run.ts --per-type "$WM_PER_TYPE" --configs recent-only,semantic-recall,working-memory,combined \
   --runs 1 --concurrency 3 --wm-concurrency 2 --max-usd "$MAX_USD"
 
+# per question: recent-only once, semantic recall twice (run1, run2: variance on the same memory),
+# then the question's store is deleted to save disk
 npx tsx src/run.ts --per-type "$CHEAP_PER_TYPE" --configs recent-only,semantic-recall \
-  --run-id run1 --concurrency 3 --max-usd "$MAX_USD"
-# variance: answer + judge the best config (semantic recall) a second time on the same memory
-npx tsx src/run.ts --per-type "$CHEAP_PER_TYPE" --configs semantic-recall \
-  --run-id run2 --concurrency 3 --cleanup --max-usd "$MAX_USD"
+  --runs 2 --repeat semantic-recall --concurrency 3 --cleanup --max-usd "$MAX_USD"
 
 npx tsx src/report.ts results/main
