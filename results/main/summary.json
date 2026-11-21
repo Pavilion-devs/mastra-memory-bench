@@ -1,0 +1,664 @@
+{
+  "meta": {
+    "dataset": "longmemeval_s",
+    "sampling": "first N per question_type after sorting by question_id (Mastra harness 'sample' method)",
+    "invocations": [
+      {
+        "at": "2026-11-17T21:03:23.991Z",
+        "perType": 2,
+        "questions": 12,
+        "configs": [
+          "recent-only",
+          "semantic-recall",
+          "working-memory",
+          "combined"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-17T21:17:26.766Z",
+        "perType": 2,
+        "questions": 12,
+        "configs": [
+          "recent-only",
+          "semantic-recall",
+          "working-memory",
+          "combined"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-17T21:23:04.002Z",
+        "perType": 2,
+        "questions": 12,
+        "configs": [
+          "recent-only",
+          "semantic-recall",
+          "working-memory",
+          "combined"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-17T21:38:31.670Z",
+        "perType": 2,
+        "questions": 12,
+        "configs": [
+          "recent-only",
+          "semantic-recall",
+          "working-memory",
+          "combined"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-17T23:05:43.172Z",
+        "perType": 20,
+        "questions": 120,
+        "configs": [
+          "recent-only",
+          "semantic-recall"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-18T00:37:58.931Z",
+        "perType": 20,
+        "questions": 120,
+        "configs": [
+          "recent-only",
+          "semantic-recall"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-18T01:06:38.555Z",
+        "perType": 20,
+        "questions": 120,
+        "configs": [
+          "semantic-recall"
+        ],
+        "runIds": [
+          "run2"
+        ]
+      },
+      {
+        "at": "2026-11-18T01:27:18.877Z",
+        "perType": 2,
+        "questions": 12,
+        "configs": [
+          "combined"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-18T01:32:35.808Z",
+        "perType": 20,
+        "questions": 120,
+        "configs": [
+          "semantic-recall"
+        ],
+        "runIds": [
+          "run1"
+        ]
+      },
+      {
+        "at": "2026-11-21T11:09:03.321Z",
+        "perType": 20,
+        "questions": 120,
+        "configs": [
+          "semantic-recall"
+        ],
+        "runIds": [
+          "run1",
+          "run2"
+        ]
+      }
+    ],
+    "agentModel": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "judgeModel": "us.anthropic.claude-sonnet-4-6",
+    "embedModel": "fastembed/bge-small-en-v1.5",
+    "temperature": 0,
+    "packages": {
+      "@ai-sdk/amazon-bedrock": "5.0.144",
+      "@libsql/client": "0.18.0",
+      "@mastra/core": "1.84.0",
+      "@mastra/fastembed": "1.3.7",
+      "@mastra/libsql": "1.31.0",
+      "@mastra/memory": "1.41.2",
+      "dotenv": "18.0.10",
+      "zod": "3.25.76"
+    },
+    "node": "v22.23.1"
+  },
+  "embedCostPerQ": 0,
+  "wmCostPerQ": 0.8827927500000001,
+  "totalSpend": 15.394646400000001,
+  "matchedQuestionIds": [
+    "001be529",
+    "0862e8bf",
+    "00ca467f",
+    "0100672e",
+    "01493427",
+    "06878be2",
+    "031748ae",
+    "08f4fc43",
+    "06f04340",
+    "0bb5a684",
+    "0e5e2d1a",
+    "1568498a"
+  ],
+  "summaries": [
+    {
+      "config": "recent-only",
+      "runId": "run1",
+      "n": 120,
+      "errors": 0,
+      "pooled": 0.08333333333333333,
+      "pooledCI": [
+        0.045893154816730314,
+        0.14662373772987763
+      ],
+      "taskAveraged": 0.08333333333333333,
+      "byType": {
+        "single-session-user": {
+          "correct": 4,
+          "total": 20,
+          "acc": 0.2
+        },
+        "single-session-assistant": {
+          "correct": 2,
+          "total": 20,
+          "acc": 0.1
+        },
+        "single-session-preference": {
+          "correct": 0,
+          "total": 20,
+          "acc": 0
+        },
+        "multi-session": {
+          "correct": 2,
+          "total": 20,
+          "acc": 0.1
+        },
+        "temporal-reasoning": {
+          "correct": 0,
+          "total": 20,
+          "acc": 0
+        },
+        "knowledge-update": {
+          "correct": 2,
+          "total": 20,
+          "acc": 0.1
+        }
+      },
+      "abstention": {
+        "correct": 8,
+        "total": 9
+      },
+      "answerInputTokensMean": 98.5,
+      "answerOutputTokensMean": 153.26666666666668,
+      "answerCostPerQ": 0.0008648333333333334,
+      "memoryBuildCostPerQ": 0,
+      "judgeCostPerQ": 0.0009811249999999998,
+      "latencyP50": 2375,
+      "latencyP95": 6027
+    },
+    {
+      "config": "semantic-recall",
+      "runId": "run1",
+      "n": 120,
+      "errors": 0,
+      "pooled": 0.7416666666666667,
+      "pooledCI": [
+        0.6567130404034741,
+        0.8116271619194934
+      ],
+      "taskAveraged": 0.7416666666666667,
+      "byType": {
+        "single-session-user": {
+          "correct": 18,
+          "total": 20,
+          "acc": 0.9
+        },
+        "single-session-assistant": {
+          "correct": 20,
+          "total": 20,
+          "acc": 1
+        },
+        "single-session-preference": {
+          "correct": 13,
+          "total": 20,
+          "acc": 0.65
+        },
+        "multi-session": {
+          "correct": 10,
+          "total": 20,
+          "acc": 0.5
+        },
+        "temporal-reasoning": {
+          "correct": 12,
+          "total": 20,
+          "acc": 0.6
+        },
+        "knowledge-update": {
+          "correct": 16,
+          "total": 20,
+          "acc": 0.8
+        }
+      },
+      "abstention": {
+        "correct": 6,
+        "total": 9
+      },
+      "answerInputTokensMean": 6631.983333333334,
+      "answerOutputTokensMean": 176.6,
+      "answerCostPerQ": 0.007514983333333334,
+      "memoryBuildCostPerQ": 0,
+      "judgeCostPerQ": 0.001051125,
+      "latencyP50": 3415,
+      "latencyP95": 5797
+    },
+    {
+      "config": "semantic-recall",
+      "runId": "run2",
+      "n": 120,
+      "errors": 0,
+      "pooled": 0.7083333333333334,
+      "pooledCI": [
+        0.6215559807865156,
+        0.7821855729401805
+      ],
+      "taskAveraged": 0.7083333333333334,
+      "byType": {
+        "single-session-user": {
+          "correct": 18,
+          "total": 20,
+          "acc": 0.9
+        },
+        "single-session-assistant": {
+          "correct": 18,
+          "total": 20,
+          "acc": 0.9
+        },
+        "single-session-preference": {
+          "correct": 10,
+          "total": 20,
+          "acc": 0.5
+        },
+        "multi-session": {
+          "correct": 11,
+          "total": 20,
+          "acc": 0.55
+        },
+        "temporal-reasoning": {
+          "correct": 12,
+          "total": 20,
+          "acc": 0.6
+        },
+        "knowledge-update": {
+          "correct": 16,
+          "total": 20,
+          "acc": 0.8
+        }
+      },
+      "abstention": {
+        "correct": 7,
+        "total": 9
+      },
+      "answerInputTokensMean": 6631.983333333334,
+      "answerOutputTokensMean": 179.975,
+      "answerCostPerQ": 0.007531858333333331,
+      "memoryBuildCostPerQ": 0,
+      "judgeCostPerQ": 0.0010612499999999997,
+      "latencyP50": 2459,
+      "latencyP95": 8574
+    },
+    {
+      "config": "working-memory",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0.4166666666666667,
+      "pooledCI": [
+        0.19325746190524656,
+        0.6804926643446271
+      ],
+      "taskAveraged": 0.4166666666666667,
+      "byType": {
+        "single-session-user": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "single-session-assistant": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "single-session-preference": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "multi-session": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "temporal-reasoning": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "knowledge-update": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 4835.166666666667,
+      "answerOutputTokensMean": 167.25,
+      "answerCostPerQ": 0.005671416666666666,
+      "memoryBuildCostPerQ": 0.8827927500000001,
+      "judgeCostPerQ": 0.00102125,
+      "latencyP50": 5069,
+      "latencyP95": 9000
+    },
+    {
+      "config": "combined",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0.9166666666666666,
+      "pooledCI": [
+        0.6461140782014047,
+        0.9851352905492264
+      ],
+      "taskAveraged": 0.9166666666666666,
+      "byType": {
+        "single-session-user": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-assistant": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-preference": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "multi-session": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "temporal-reasoning": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "knowledge-update": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 11375.75,
+      "answerOutputTokensMean": 168.66666666666666,
+      "answerCostPerQ": 0.012219083333333334,
+      "memoryBuildCostPerQ": 0.8827927500000001,
+      "judgeCostPerQ": 0.0010255000000000002,
+      "latencyP50": 3983,
+      "latencyP95": 10003
+    }
+  ],
+  "matched": [
+    {
+      "config": "recent-only",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0,
+      "pooledCI": [
+        0,
+        0.2425007574992425
+      ],
+      "taskAveraged": 0,
+      "byType": {
+        "single-session-user": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "single-session-assistant": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "single-session-preference": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "multi-session": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "temporal-reasoning": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "knowledge-update": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 147.33333333333334,
+      "answerOutputTokensMean": 159.08333333333334,
+      "answerCostPerQ": 0.0009427500000000001,
+      "memoryBuildCostPerQ": 0,
+      "judgeCostPerQ": 0.0009967499999999998,
+      "latencyP50": 2196,
+      "latencyP95": 9855
+    },
+    {
+      "config": "semantic-recall",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0.75,
+      "pooledCI": [
+        0.4676896608793401,
+        0.9110599603710388
+      ],
+      "taskAveraged": 0.75,
+      "byType": {
+        "single-session-user": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-assistant": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-preference": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "multi-session": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "temporal-reasoning": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "knowledge-update": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 6688.083333333333,
+      "answerOutputTokensMean": 190.25,
+      "answerCostPerQ": 0.007639333333333334,
+      "memoryBuildCostPerQ": 0,
+      "judgeCostPerQ": 0.00109025,
+      "latencyP50": 2916,
+      "latencyP95": 5452
+    },
+    {
+      "config": "working-memory",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0.4166666666666667,
+      "pooledCI": [
+        0.19325746190524656,
+        0.6804926643446271
+      ],
+      "taskAveraged": 0.4166666666666667,
+      "byType": {
+        "single-session-user": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "single-session-assistant": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "single-session-preference": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        },
+        "multi-session": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "temporal-reasoning": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "knowledge-update": {
+          "correct": 0,
+          "total": 2,
+          "acc": 0
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 4835.166666666667,
+      "answerOutputTokensMean": 167.25,
+      "answerCostPerQ": 0.005671416666666666,
+      "memoryBuildCostPerQ": 0.8827927500000001,
+      "judgeCostPerQ": 0.00102125,
+      "latencyP50": 5069,
+      "latencyP95": 9000
+    },
+    {
+      "config": "combined",
+      "runId": "run1",
+      "n": 12,
+      "errors": 0,
+      "pooled": 0.9166666666666666,
+      "pooledCI": [
+        0.6461140782014047,
+        0.9851352905492264
+      ],
+      "taskAveraged": 0.9166666666666666,
+      "byType": {
+        "single-session-user": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-assistant": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "single-session-preference": {
+          "correct": 1,
+          "total": 2,
+          "acc": 0.5
+        },
+        "multi-session": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "temporal-reasoning": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        },
+        "knowledge-update": {
+          "correct": 2,
+          "total": 2,
+          "acc": 1
+        }
+      },
+      "abstention": {
+        "correct": 0,
+        "total": 0
+      },
+      "answerInputTokensMean": 11375.75,
+      "answerOutputTokensMean": 168.66666666666666,
+      "answerCostPerQ": 0.012219083333333334,
+      "memoryBuildCostPerQ": 0.8827927500000001,
+      "judgeCostPerQ": 0.0010255000000000002,
+      "latencyP50": 3983,
+      "latencyP95": 10003
+    }
+  ]
+}
